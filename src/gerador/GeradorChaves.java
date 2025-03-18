@@ -5,6 +5,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Random;
+import java.util.Scanner;
 import java.util.Set;
 
 public class GeradorChaves {
@@ -33,10 +34,15 @@ public class GeradorChaves {
     }
 
     public static void main(String[] args) {
-        int quantidade = 1000000;  // Quantidade de chaves a serem geradas
-        Set<String> listaChaves = gerarListaChaves(quantidade);
-        salvarEmArquivo(listaChaves, "chaves.txt");
+        Scanner scanner = new Scanner(System.in);
+        System.out.print("Digite a quantidade de chaves a serem geradas: ");
+        int quantidade = scanner.nextInt();
+        scanner.close();
 
-        System.out.println(quantidade + " chaves geradas e salvas em 'chaves.txt'.");
+        Set<String> listaChaves = gerarListaChaves(quantidade);
+        String nomeArquivo = "chaves" + quantidade + ".txt";
+        salvarEmArquivo(listaChaves, nomeArquivo);
+
+        System.out.println(quantidade + " chaves geradas e salvas em '" + nomeArquivo + "'.");
     }
 }
