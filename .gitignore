@@ -1,0 +1,39 @@
+# Diretórios e arquivos do compilador Java
+bin/
+build/
+target/
+
+# Arquivos do Eclipse
+.classpath
+.project
+.settings/
+
+# Arquivos do IntelliJ IDEA
+.idea/
+*.iml
+
+# Arquivos do NetBeans
+nbproject/
+
+# Arquivos do Maven
+/.mvn/
+target/
+
+# Arquivos do Gradle
+.gradle/
+build/
+
+# Dependências do Java
+*.jar
+*.war
+*.ear
+
+# Arquivos de log
+*.log
+
+# Arquivos de configuração do sistema operacional
+.DS_Store
+Thumbs.db
+
+# Arquivos de testes de cobertura (por exemplo, JaCoCo)
+jacoco.exec
