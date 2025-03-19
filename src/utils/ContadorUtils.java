@@ -1,6 +1,7 @@
 package utils;
 
 import entities.AnaliseDigitos;
+import entities.AnaliseDigitosPair;
 import entities.Digitos;
 
 import java.io.IOException;
@@ -46,21 +47,47 @@ public class ContadorUtils {
                 lista.add(digitos);
             }
             double frequenciaEsperada = total / 10.0;
-            double variacao = 0.0;
+            double variacao = 0;
 
             for (Map.Entry<Integer, Long> entry : mapa.entrySet()) {
                 long quantidade = entry.getValue();
-                variacao += Math.abs(quantidade - frequenciaEsperada);
-            }
 
+                // Transformando a quantidade para double
+                double quantidadeDouble = (double) quantidade;
+
+                // Calculando a diferença (frequência esperada ainda sendo double)
+                double diferenca = Math.abs(quantidadeDouble - frequenciaEsperada);
+
+                // Atualizando a variação
+                variacao += diferenca;
+            }
 
             resultado.add(new AnaliseDigitos(lista, variacao));
         }
 
-        return resultado;
+
+            return resultado;
     }
 
     public static List<String> lerChavesDoArquivo(String caminhoArquivo) throws IOException {
-            return Files.readAllLines(Paths.get(caminhoArquivo));
+        return Files.readAllLines(Paths.get(caminhoArquivo));
     }
+
+    public static List<Integer> encontrarMelhoresColunas(List<AnaliseDigitos> resultado, int numDigitos) {
+        List<Integer> melhoresColunas = new ArrayList<>();
+
+        List<AnaliseDigitosPair> pares = new ArrayList<>();
+        for (int i = 0; i < resultado.size(); i++) {
+            pares.add(new AnaliseDigitosPair(i, resultado.get(i).variacao()));
+        }
+
+        pares.sort(Comparator.comparing(a -> a.variacao, Comparator.naturalOrder()));
+
+        for (int i = 0; i < Math.min(numDigitos, pares.size()); i++) {
+            melhoresColunas.add(pares.get(i).index);
+        }
+
+        return melhoresColunas;
+    }
+
 }
