@@ -1,119 +1,87 @@
 package hash;
 
-import entities.AnaliseDigitos;
-import entities.Digitos;
-
+import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
+import static service.HtmlService.gerarArquivoHTML;
+import static service.HtmlService.gerarHomeHTML;
 import static utils.ContadorUtils.*;
 
 public class HashTableAnalysis {
     public static void main(String[] args) throws IOException {
-        Scanner sc = new Scanner(System.in);
-        System.out.print("Chaves que deseja ler: ");
-        String chaves = sc.nextLine().trim();
-        String file = "D:\\uft\\hashtable\\chaves" + chaves + ".txt";
-        int tabelaHashSize = Integer.parseInt(chaves);
+        File pastaRaiz = new File("D:\\uft\\hashtable\\");
+        File[] arquivos = pastaRaiz.listFiles((dir, name) -> name.matches("chaves\\d+\\.txt"));
 
-        if(tabelaHashSize < 10 )
-            tabelaHashSize = 10;
-
-        int numDigitosNecessarios = (int) Math.ceil(Math.log10(tabelaHashSize));
-
-
-        String[] tabelaHash = new String[tabelaHashSize];
-        for (int i = 0; i < tabelaHash.length; i++) {
-            tabelaHash[i] = null;
+        if (arquivos == null || arquivos.length == 0) {
+            System.out.println("Nenhum arquivo de chaves encontrado na pasta raiz.");
+            return;
         }
 
-        System.out.println("Número de dígitos a serem usados: " + numDigitosNecessarios);
-        System.out.println("Tamanho da tabela hash: " + tabelaHashSize);
+        List<String> paginasGeradas = new ArrayList<>();
 
-        List<String> chaves2 = lerChavesDoArquivo(file);
-        int[][] matriz = new int[chaves2.size()][chaves2.get(0).length()];
-        for (int i = 0; i < chaves2.size(); i++) {
-            for (int j = 0; j < chaves2.get(i).length(); j++) {
-                matriz[i][j] = Character.getNumericValue(chaves2.get(i).charAt(j));
+        for (File arquivo : arquivos) {
+            String nomeArquivo = arquivo.getName();
+            String chaves = nomeArquivo.replace("chaves", "").replace(".txt", "");
+            String filePath = arquivo.getAbsolutePath();
+            int tabelaHashSize = Integer.parseInt(chaves);
+
+            if (tabelaHashSize < 10) {
+                tabelaHashSize = 10;
+
+            } else if (tabelaHashSize < 100) {
+                tabelaHashSize = 100;
             }
-        }
 
-        var resultado = contarPorColuna(matriz);
+            int digitosNecessarios = (int) Math.ceil(Math.log10(tabelaHashSize));
+            String[] tabelaHash = new String[tabelaHashSize];
+            Arrays.fill(tabelaHash, null);
 
-        List<Integer> melhoresColunas = encontrarMelhoresColunas(resultado, numDigitosNecessarios);
-        melhoresColunas = melhoresColunas.stream()
-                .sorted(Comparator.comparingDouble(c -> resultado.get(c).variacao()))
-                .limit(numDigitosNecessarios)
-                .toList();
-
-        System.out.println("\nTodas as chaves lidas do arquivo:");
-        for (String chave : chaves2) {
-            System.out.println(chave);
-        }
-
-        for (Integer coluna : melhoresColunas) {
-            System.out.println("\nColuna " + (coluna + 1) + " associada com as seguintes chaves:");
+            List<String> chaves2 = lerChavesDoArquivo(filePath);
+            int[][] matriz = new int[chaves2.size()][chaves2.get(0).length()];
             for (int i = 0; i < chaves2.size(); i++) {
-                String chave = chaves2.get(i);
-                char digitoColuna = chave.charAt(coluna);
-                System.out.println("Chave: " + chave + " -> Coluna: " + (coluna + 1) + " -> Dígito: " + digitoColuna);
+                for (int j = 0; j < chaves2.get(i).length(); j++) {
+                    matriz[i][j] = Character.getNumericValue(chaves2.get(i).charAt(j));
+                }
             }
+
+            var resultado = contarPorColuna(matriz);
+            List<Integer> melhoresColunas = encontrarMelhoresColunas(resultado, digitosNecessarios)
+                    .stream()
+                    .sorted(Comparator.comparingDouble(c -> resultado.get(c).variacao()))
+                    .limit(digitosNecessarios)
+                    .toList();
+
+            int chavesInseridas = 0, colisoes = 0;
+            Map<String, Integer> indicesChaves = new HashMap<>();
+            Map<String, String> chaveColisoes = new HashMap<>();
+
+            for (String chave : chaves2) {
+                StringBuilder indexBuilder = new StringBuilder();
+                for (Integer coluna : melhoresColunas) {
+                    indexBuilder.append(chave.charAt(coluna));
+                }
+                int index = Integer.parseInt(indexBuilder.toString());
+
+                if (tabelaHash[index] == null) {
+                    tabelaHash[index] = chave;
+                    indicesChaves.put(chave, index);
+                    chavesInseridas++;
+                } else {
+                    colisoes++;
+                    chaveColisoes.put(chave, tabelaHash[index]);
+                }
+            }
+
+            String nomePagina = "chaves" + chaves + ".html";
+            paginasGeradas.add(nomePagina);
+            gerarArquivoHTML(chaves2, matriz, melhoresColunas, resultado, chavesInseridas, colisoes,
+                    tabelaHashSize, indicesChaves, chaveColisoes, melhoresColunas, nomePagina);
         }
 
-        int colunaIndex = 1;
-        for (AnaliseDigitos analise : resultado) {
-            System.out.println("\nDígito " + colunaIndex + ":");
-            for (Digitos d : analise.digitos()) {
-                System.out.println("Número: " + d.numero() + ", Quantidade: " + d.soma());
-            }
-            System.out.printf("Variação: %.1f\n", analise.variacao());
-            colunaIndex++;
-        }
-
-        System.out.println("\nMelhores colunas selecionadas: " + melhoresColunas.stream().map(idx -> idx + 1).toList());
-
-        int chavesInseridas = 0;
-        int colisoes = 0;
-
-        Map<String, Integer> indicesChaves = new HashMap<>();
-        Map<String, String> chaveColisoes = new HashMap<>();
-
-        System.out.println("\nDetalhes da inserção na tabela hash:");
-        for (String chave : chaves2) {
-            StringBuilder indexBuilder = new StringBuilder();
-            for (Integer coluna : melhoresColunas) {
-                indexBuilder.append(chave.charAt(coluna));
-            }
-
-            int index = Integer.parseInt(indexBuilder.toString());
-
-            System.out.print("Chave: " + chave + " -> Índice calculado: " + index);
-
-            if (tabelaHash[index] == null) {
-                tabelaHash[index] = chave;
-                indicesChaves.put(chave, index);  // Armazenar o índice da chave
-                chavesInseridas++;
-                System.out.println(" -> Inserido com sucesso");
-            } else {
-                colisoes++;
-                chaveColisoes.put(chave, tabelaHash[index]);  // Armazenar com quem colidiu
-                System.out.println(" -> COLISÃO com a chave " + tabelaHash[index] + " (não inserido)");
-            }
-        }
-
-        System.out.println("\nTabela Hash final (apenas posições ocupadas):");
-        for (int i = 0; i < tabelaHash.length; i++) {
-            if (tabelaHash[i] != null) {
-                System.out.println("Posição " + i + ": " + tabelaHash[i]);
-            }
-        }
-
-        System.out.println("\nTotal de chaves inseridas: " + chavesInseridas);
-        System.out.println("Total de colisões: " + colisoes);
-
-        gerarArquivoHTML(chaves2, matriz, melhoresColunas, resultado, chavesInseridas, colisoes,
-                tabelaHashSize, indicesChaves, chaveColisoes, melhoresColunas);
-
-        System.out.println("\nArquivo HTML gerado com sucesso: hash_analysis.html");
+        gerarHomeHTML(paginasGeradas);
+        System.out.println("\nGENERATED WITH SUCCESS!");
     }
+
+
 }
