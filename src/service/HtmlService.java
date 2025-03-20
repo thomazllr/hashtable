@@ -3,6 +3,7 @@ package service;
 import entities.AnaliseDigitos;
 
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.List;
@@ -11,7 +12,27 @@ import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 public class HtmlService {
+    public static void main(String[] args) {
+        String pastaProjeto = System.getProperty("user.dir");
+        File diretorio = new File(pastaProjeto);
 
+        // Lista todos os arquivos .html na pasta do projeto
+        File[] arquivosHtml = diretorio.listFiles((dir, name) -> name.toLowerCase().endsWith(".html"));
+
+        if (arquivosHtml != null && arquivosHtml.length > 0) {
+            for (File arquivo : arquivosHtml) {
+                if (arquivo.delete()) {
+                    System.out.println("Removido: " + arquivo.getAbsolutePath());
+                } else {
+                    System.out.println("Erro ao remover: " + arquivo.getAbsolutePath());
+                }
+            }
+        } else {
+            System.out.println("Nenhum arquivo .html encontrado.");
+        }
+
+        System.out.println("Processo concluído.");
+    }
 
     public static void gerarHomeHTML(List<String> paginasGeradas) throws IOException {
         StringBuilder html = new StringBuilder();
