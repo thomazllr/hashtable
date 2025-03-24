@@ -1,16 +1,14 @@
 package utils;
 
 import entities.AnaliseDigitos;
-import entities.AnaliseDigitosPair;
 import entities.Digitos;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class ContadorUtils {
 
@@ -55,13 +53,10 @@ public class ContadorUtils {
             for (Map.Entry<Integer, Long> entry : mapa.entrySet()) {
                 long quantidade = entry.getValue();
 
-                // Transformando a quantidade para double
                 double quantidadeDouble = (double) quantidade;
 
-                // Calculando a diferença (frequência esperada ainda sendo double)
                 double diferenca = Math.abs(quantidadeDouble - frequenciaEsperada);
 
-                // Atualizando a variação
                 variacao += diferenca;
             }
 
@@ -69,7 +64,7 @@ public class ContadorUtils {
         }
 
 
-            return resultado;
+        return resultado;
     }
 
     public static List<String> lerChavesDoArquivo(String caminhoArquivo) throws IOException {
@@ -77,24 +72,11 @@ public class ContadorUtils {
     }
 
     public static List<Integer> encontrarMelhoresColunas(List<AnaliseDigitos> resultado, int numDigitos) {
-        List<Integer> melhoresColunas = new ArrayList<>();
-
-        List<AnaliseDigitosPair> pares = new ArrayList<>();
-        for (int i = 0; i < resultado.size(); i++) {
-            pares.add(new AnaliseDigitosPair(i, resultado.get(i).variacao()));
-        }
-
-        pares.sort(Comparator.comparing(a -> a.variacao, Comparator.naturalOrder()));
-
-        for (int i = 0; i < Math.min(numDigitos, pares.size()); i++) {
-            melhoresColunas.add(pares.get(i).index);
-        }
-
-        return melhoresColunas;
+        return IntStream.range(0, resultado.size())
+                .boxed()
+                .sorted(Comparator.comparing(i -> resultado.get(i).variacao()))
+                .limit(numDigitos)
+                .collect(Collectors.toList());
     }
-
-
-
-
 
 }

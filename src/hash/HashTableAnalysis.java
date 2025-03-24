@@ -46,11 +46,7 @@ public class HashTableAnalysis {
             }
 
             var resultado = contarPorColuna(matriz);
-            List<Integer> melhoresColunas = encontrarMelhoresColunas(resultado, digitosNecessarios)
-                    .stream()
-                    .sorted(Comparator.comparingDouble(c -> resultado.get(c).variacao()))
-                    .limit(digitosNecessarios)
-                    .toList();
+            List<Integer> melhoresColunas = encontrarMelhoresColunas(resultado, digitosNecessarios);
 
             int chavesInseridas = 0, colisoes = 0;
             Map<String, Integer> indicesChaves = new HashMap<>();
